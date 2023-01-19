@@ -1,0 +1,47 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: starburst-enterprise.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: StarburstEnterprise is the Schema for the starburstenterprises
+        API
+      displayName: Starburst Enterprise
+      kind: StarburstEnterprise
+      name: starburstenterprises.example.com.example.com
+      version: v1alpha1
+  description: Dummy Starburst Enterprise
+  displayName: Starburst Enterprise
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - key
+  - word
+  - s
+  links:
+  - name: Starburst Enterprise
+    url: https://starburst-enterprise.domain
+  maturity: alpha
+  provider:
+    name: Me
+  version: 0.0.0

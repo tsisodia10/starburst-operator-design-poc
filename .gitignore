@@ -1,0 +1,6 @@
+**/bin/
+**/testbin/
+**/cover.out
+**/tls/*
+!**/tls/.gitkeep
+run_all.sh

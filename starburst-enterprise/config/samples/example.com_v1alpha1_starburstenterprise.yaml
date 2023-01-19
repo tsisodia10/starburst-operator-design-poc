@@ -1,0 +1,12 @@
+apiVersion: example.com.example.com/v1alpha1
+kind: StarburstEnterprise
+metadata:
+  labels:
+    app.kubernetes.io/name: starburstenterprise
+    app.kubernetes.io/instance: starburstenterprise-sample
+    app.kubernetes.io/part-of: starburst-enterprise
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: starburst-enterprise
+  name: starburstenterprise-sample
+spec:
+  # TODO(user): Add fields here
