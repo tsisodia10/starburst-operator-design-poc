@@ -28,6 +28,8 @@ type StarburstAddonSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+
 	// Foo is an example field of StarburstAddon. Edit starburstaddon_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
@@ -40,6 +42,7 @@ type StarburstAddonStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Foo",type=string,JSONPath=".spec.foo",description="bla bla bla bla"
 
 // StarburstAddon is the Schema for the starburstaddons API
 type StarburstAddon struct {

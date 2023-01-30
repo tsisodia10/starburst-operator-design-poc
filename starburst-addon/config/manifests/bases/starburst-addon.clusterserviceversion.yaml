@@ -14,6 +14,13 @@ spec:
       displayName: Starburst Addon
       kind: StarburstAddon
       name: starburstaddons.example.com.example.com
+      specDescriptors:
+      - description: Foo is an example field of StarburstAddon. Edit starburstaddon_types.go
+          to remove/update
+        displayName: Foo
+        path: foo
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       version: v1alpha1
   description: New Design Starburst Addon
   displayName: Starburst Addon
@@ -25,13 +32,13 @@ spec:
       deployments: null
     strategy: ""
   installModes:
-  - supported: false
+  - supported: true
     type: OwnNamespace
   - supported: false
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
-  - supported: true
+  - supported: false
     type: AllNamespaces
   keywords:
   - key

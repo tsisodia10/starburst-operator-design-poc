@@ -46,7 +46,7 @@ spec:
   sourceType: grpc
   grpcPodConfig:
     securityContextConfig: restricted
-  image: quay.io/tomerfi/starburst-combined-catalog:latest
+  image: quay.io/tomerfi/starburst-combined-catalog:dev
   displayName: Starburst Combined Catalog
   publisher: Me
   updateStrategy:
@@ -107,13 +107,23 @@ EOF
 ### Verify both operators are up
 
 ```bash
-# can take a couple of minutes
+# might take a couple of minutes
 $ watch kubectl get pods -n starburst-playground
 
-NAME                                                       READY   STATUS    RESTARTS   AGE
-starburst-addon-controller-manager-6dd64756f4-thstl        2/2     Running   0          43s
-starburst-enterprise-controller-manager-76b6fbfc7f-n5jjw   2/2     Running   0          46s
-starburst-validate-enterprise-webhook-67b74967f8-7jqbq     2/2     Running   0          43s
+NAME                                                          READY   STATUS    RESTARTS   AGE
+starburst-addon-controller-manager-7c7f978ff-svqv4            2/2     Running   0          51s
+starburst-addon-validate-enterprise-webhook-685f4f7db-8qwjr   2/2     Running   0          51s
+starburst-enterprise-controller-manager-8b4869d99-6wncl       2/2     Running   0          54s
+```
+
+### Verify both packages are deployed successfully
+
+```bash
+$ kubectl get csv -n starburst-playground
+
+NAME                          DISPLAY                VERSION   REPLACES   PHASE
+starburst-addon.v0.0.1        Starburst Addon        0.0.1                Succeeded
+starburst-enterprise.v0.0.1   Starburst Enterprise   0.0.1                Succeeded
 ```
 
 ## Run Starburst Addon
@@ -162,7 +172,7 @@ $ kubectl get starburstenterprises -n starburst-playground starburstaddon-sample
 ```bash
 $ kubectl delete starburstenterprises -n starburst-playground starburstaddon-sample-enterprise
 
-Error from server (Unauthorized Access): admission webhook "starburst-validate-enterprise-webhook.example.com.example.com" denied the request: DELETE not allowed
+Error from server (Unauthorized Access): admission webhook "starburst-addon-validate-enterprise-webhook.example.com.example.com" denied the request: DELETE not allowed
 ```
 
 ### Attempt (and fail) manually patching the StarburstEnterprise CR
@@ -170,7 +180,7 @@ Error from server (Unauthorized Access): admission webhook "starburst-validate-e
 ```bash
 $ kubectl label starburstenterprises -n starburst-playground starburstaddon-sample-enterprise  someKey=someValue
 
-Error from server (Unauthorized Access): admission webhook "starburst-validate-enterprise-webhook.example.com.example.com" denied the request: UPDATE not allowed
+Error from server (Unauthorized Access): admission webhook "starburst-addon-validate-enterprise-webhook.example.com.example.com" denied the request: UPDATE not allowed
 ```
 
 ### Attempt (and fail) manually creating a new StarburstEnterprise CR
@@ -184,7 +194,7 @@ metadata:
   namespace: starburst-playground
 EOF
 
-Error from server (Unauthorized Access): error when creating "STDIN": admission webhook "starburst-validate-enterprise-webhook.example.com.example.com" denied the request: CREATE not allowed
+Error from server (Unauthorized Access): error when creating "STDIN": admission webhook "starburst-addon-validate-enterprise-webhook.example.com.example.com" denied the request: CREATE not allowed
 ```
 
 ### Delete the StarburstAddon CR

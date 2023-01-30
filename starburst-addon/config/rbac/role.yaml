@@ -31,3 +31,15 @@ rules:
   - get
   - patch
   - update
+# TODO do we need secrets at the cluster level??
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch

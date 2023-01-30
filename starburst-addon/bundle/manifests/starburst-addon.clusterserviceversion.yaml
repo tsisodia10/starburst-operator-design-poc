@@ -17,26 +17,36 @@ metadata:
             },
             "name": "starburstaddon-sample"
           },
-          "spec": null
+          "spec": {
+            "foo": "bar"
+          }
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.25.2
+    createdAt: "2023-02-02T19:03:38Z"
+    operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: starburst-addon.v0.0.1
+  name: starburst-addon.v0.0.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
-    required:
-    - kind: StarburstEnterprise
-      name: starburstenterprises.example.com.example.com
-      version: v1alpha1
     owned:
     - description: StarburstAddon is the Schema for the starburstaddons API
       displayName: Starburst Addon
       kind: StarburstAddon
       name: starburstaddons.example.com.example.com
+      specDescriptors:
+      - description: Foo is an example field of StarburstAddon. Edit starburstaddon_types.go
+          to remove/update
+        displayName: Foo
+        path: foo
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      version: v1alpha1
+    required:
+    - kind: StarburstEnterprise
+      name: starburstenterprises.example.com.example.com
       version: v1alpha1
   description: New Design Starburst Addon
   displayName: Starburst Addon
@@ -47,7 +57,6 @@ spec:
     spec:
       clusterPermissions:
       - rules:
-        # own rules
         - apiGroups:
           - example.com.example.com
           resources:
@@ -74,7 +83,17 @@ spec:
           - get
           - patch
           - update
-        # authentication and authorization rules
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - authentication.k8s.io
           resources:
@@ -87,7 +106,6 @@ spec:
           - subjectaccessreviews
           verbs:
           - create
-        # enterprise rules
         - apiGroups:
           - example.com.example.com
           resources:
@@ -114,22 +132,9 @@ spec:
           - get
           - patch
           - update
-        # various rules
-        - apiGroups:
-          - ""
-          resources:
-          - secrets
-          verbs:
-          - create
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        serviceAccountName: starburst-addon-service-account
+        serviceAccountName: starburst-addon-controller-manager
       deployments:
-      - name: starburst-addon-controller-manager
-        label:
+      - label:
           app.kubernetes.io/component: manager
           app.kubernetes.io/created-by: starburst-addon
           app.kubernetes.io/instance: controller-manager
@@ -137,6 +142,7 @@ spec:
           app.kubernetes.io/name: deployment
           app.kubernetes.io/part-of: starburst-addon
           control-plane: controller-manager
+        name: starburst-addon-controller-manager
         spec:
           replicas: 1
           selector:
@@ -167,13 +173,13 @@ spec:
                         values:
                         - linux
               containers:
-              - name: kube-rbac-proxy
-                args:
+              - args:
                 - --secure-listen-address=0.0.0.0:8443
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=0
                 image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1
+                name: kube-rbac-proxy
                 ports:
                 - containerPort: 8443
                   name: https
@@ -190,20 +196,19 @@ spec:
                   capabilities:
                     drop:
                     - ALL
-              - name: manager
-                args:
+              - command:
+                - /addon
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                command:
-                - /addon
-                image: quay.io/tomerfi/starburst-addon-operator:v0.0.1
+                image: quay.io/tomerfi/starburst-addon-operator:v0.0.2
                 livenessProbe:
                   httpGet:
                     path: /healthz
                     port: 8081
                   initialDelaySeconds: 15
                   periodSeconds: 20
+                name: manager
                 readinessProbe:
                   httpGet:
                     path: /readyz
@@ -224,10 +229,9 @@ spec:
                     - ALL
               securityContext:
                 runAsNonRoot: true
-              serviceAccountName: starburst-addon-service-account
+              serviceAccountName: starburst-addon-controller-manager
               terminationGracePeriodSeconds: 10
-      - name: starburst-validate-enterprise-webhook
-        label:
+      - label:
           app.kubernetes.io/component: validation-webhook
           app.kubernetes.io/created-by: starburst-addon
           app.kubernetes.io/instance: validation-webhook-manager
@@ -235,6 +239,7 @@ spec:
           app.kubernetes.io/name: deployment
           app.kubernetes.io/part-of: starburst-addon
           control-plane: validation-webhook-manager
+        name: starburst-addon-validate-enterprise-webhook
         spec:
           replicas: 1
           selector:
@@ -265,15 +270,15 @@ spec:
                         values:
                         - linux
               containers:
-              - name: kube-rbac-proxy
-                args:
-                - --secure-listen-address=0.0.0.0:8444
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=0
                 image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1
+                name: kube-rbac-proxy
                 ports:
-                - containerPort: 8444
+                - containerPort: 8443
                   name: https
                   protocol: TCP
                 resources:
@@ -288,8 +293,7 @@ spec:
                   capabilities:
                     drop:
                     - ALL
-              - name: manager
-                command:
+              - command:
                 - /webhook
                 - --tls-cert=/tmp/k8s-webhook-server/serving-certs/tls.crt
                 - --tls-key=/tmp/k8s-webhook-server/serving-certs/tls.key
@@ -297,23 +301,22 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tomerfi/starburst-addon-operator:v0.0.1
-                ports:
-                - name:  webhook-server
-                  protocol: TCP
-                  containerPort: 9443
-                readinessProbe:
-                  httpGet:
-                    path: /readyz
-                    port: 8081
-                  initialDelaySeconds: 5
-                  periodSeconds: 10
+                image: quay.io/tomerfi/starburst-addon-operator:v0.0.2
                 livenessProbe:
                   httpGet:
                     path: /healthz
                     port: 8081
                   initialDelaySeconds: 15
                   periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                 resources:
                   limits:
                     cpu: 500m
@@ -321,23 +324,14 @@ spec:
                   requests:
                     cpu: 10m
                     memory: 64Mi
-                volumeMounts:
-                  - name: webhook-server-cert
-                    mountPath: /tmp/k8s-webhook-server/serving-certs
-                    readOnly: true
                 securityContext:
                   allowPrivilegeEscalation: false
                   capabilities:
                     drop:
                     - ALL
-              volumes:
-              - name:  webhook-server-cert
-                secret:
-                  defaultMode: 420
-                  secretName: starburst-validate-enterprise-webhook-service-cert
               securityContext:
                 runAsNonRoot: true
-              serviceAccountName: starburst-addon-service-account
+              serviceAccountName: starburst-addon-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -372,7 +366,7 @@ spec:
           verbs:
           - create
           - patch
-        serviceAccountName: starburst-addon-service-account
+        serviceAccountName: starburst-addon-controller-manager
     strategy: deployment
   installModes:
   - supported: true
@@ -393,16 +387,14 @@ spec:
   maturity: alpha
   provider:
     name: Me
-  version: 0.0.1
+  version: 0.0.2
   webhookdefinitions:
-  - deploymentName: starburst-validate-enterprise-webhook
-    type: ValidatingAdmissionWebhook
-    admissionReviewVersions:
-      - "v1"
+  - admissionReviewVersions:
+    - v1
     containerPort: 9443
-    targetPort: 9443
+    deploymentName: starburst-addon-validate-enterprise-webhook
     failurePolicy: Fail
-    generateName: starburst-validate-enterprise-webhook.example.com.example.com
+    generateName: validate-enterprise-webhook.example.com.example.com
     rules:
     - apiGroups:
       - example.com.example.com
@@ -414,5 +406,9 @@ spec:
       - DELETE
       resources:
       - starburstenterprises
+      scope: '*'
     sideEffects: None
+    targetPort: 9443
+    timeoutSeconds: 10
+    type: ValidatingAdmissionWebhook
     webhookPath: /validate-enterprise
