@@ -19,7 +19,10 @@ package addon
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/example/starburst-addon-operator/api/v1alpha1"
 	validator "github.com/example/starburst-addon-operator/pkg/webhook"
@@ -117,10 +120,22 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	// NOTE secrets, configmaps, prometheus servers, and service monitors from the original operator will go here
+	// NOTE secrets, configmaps, prometheus servers, and service monitors from the original operator will goes here
+
+	// load enterprise manifest from path propagated by a secret created for the vault keys
+	manifest, err := os.ReadFile("/opt/enterprise/enterprise.yaml")
+	if err != nil {
+		logger.Error(err, "failed to fetch enterprise manifest")
+		return ctrl.Result{}, err
+	}
 
 	// reconcile unstructured enterprise resource
-	desiredEnterprise := createDesiredEnterprise(addon)
+	desiredEnterprise, err := createDesiredEnterprise(addon, manifest)
+	if err != nil {
+		logger.Error(err, "failed to fetch enterprise manifest")
+		return ctrl.Result{}, err
+	}
+
 	current := &unstructured.Unstructured{}
 	current.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
@@ -169,20 +184,22 @@ func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // create the desired enterprise resource
-func createDesiredEnterprise(addon *v1alpha1.StarburstAddon) unstructured.Unstructured {
-	// NOTE based on the current operator this unstructured will be constructed from yaml fetched from a config map
+func createDesiredEnterprise(addon *v1alpha1.StarburstAddon, manifest []byte) (unstructured.Unstructured, error) {
 	enterprise := unstructured.Unstructured{}
+	deserialized := make(map[string]interface{})
+	if err := yaml.Unmarshal(manifest, deserialized); err != nil {
+		return enterprise, err
+	}
+
+	enterprise.SetUnstructuredContent(deserialized)
 	enterprise.SetGroupVersionKind(validator.EnterpriseGvk)
 	enterprise.SetName(createDesiredEnterpriseName(addon.Name))
 	enterprise.SetNamespace(addon.Namespace)
 	enterprise.SetOwnerReferences([]metav1.OwnerReference{
 		*metav1.NewControllerRef(addon, addon.GetObjectKind().GroupVersionKind()),
 	})
-	enterprise.SetLabels(map[string]string{
-		"app": "cool-poc",
-	})
 
-	return enterprise
+	return enterprise, nil
 }
 
 // create the desired enterprise name

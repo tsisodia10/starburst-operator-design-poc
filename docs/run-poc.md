@@ -6,6 +6,7 @@ Follow the instructions in this document and you will:
 - Create a Kind cluster
 - Install OLM
 - Apply a *CatalogSource* CR referencing our *starburst-addon* and *starburst-enterprise* packages
+- Create a *Secret* containing the desired manifest for the *StarburstEnterprise* CR
 - Subscribe to the *starburst-addon* package (depends on *starburst-enterprise*)
   - Verify both operators are up
 - Apply a *StarburstAddon* CR
@@ -69,6 +70,14 @@ starburst-enterprise                       Starburst Combined Catalog   45s
 
 ```bash
 kubectl create ns starburst-playground
+```
+
+### Create the Vault Secret
+
+```bash
+# a secret named "addon" structured from the vault keys will be manifested by osd
+kubectl create secret generic addon -n starburst-playground \
+--from-file enterprise.yaml=starburst-enterprise/config/samples/example.com_v1alpha1_starburstenterprise.yaml
 ```
 
 ### Apply OperatorGroup for target namespace

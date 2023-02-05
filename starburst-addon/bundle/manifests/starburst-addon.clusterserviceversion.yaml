@@ -23,10 +23,10 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-02-02T19:03:38Z"
+    createdAt: "2023-02-05T10:11:26Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: starburst-addon.v0.0.2
+  name: starburst-addon.v0.0.3
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -201,7 +201,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tomerfi/starburst-addon-operator:v0.0.2
+                image: quay.io/tomerfi/starburst-addon-operator:v0.0.3
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -227,10 +227,19 @@ spec:
                   capabilities:
                     drop:
                     - ALL
+                volumeMounts:
+                - mountPath: /opt/enterprise
+                  name: addon-vault
+                  readOnly: true
               securityContext:
                 runAsNonRoot: true
               serviceAccountName: starburst-addon-controller-manager
               terminationGracePeriodSeconds: 10
+              volumes:
+              - name: addon-vault
+                secret:
+                  defaultMode: 493
+                  secretName: addon
       - label:
           app.kubernetes.io/component: validation-webhook
           app.kubernetes.io/created-by: starburst-addon
@@ -301,7 +310,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=127.0.0.1:8080
                 - --leader-elect
-                image: quay.io/tomerfi/starburst-addon-operator:v0.0.2
+                image: quay.io/tomerfi/starburst-addon-operator:v0.0.3
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -387,7 +396,7 @@ spec:
   maturity: alpha
   provider:
     name: Me
-  version: 0.0.2
+  version: 0.0.3
   webhookdefinitions:
   - admissionReviewVersions:
     - v1

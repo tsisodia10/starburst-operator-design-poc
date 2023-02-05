@@ -2,3 +2,6 @@
 # It should be run by config/default
 resources:
 - addon.yaml
+
+patchesStrategicMerge:
+  - patches/addon_secret_volume.yaml

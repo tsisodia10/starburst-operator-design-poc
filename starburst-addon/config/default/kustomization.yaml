@@ -18,7 +18,7 @@ namePrefix: starburst-addon-
 images:
 - name: operator
   newName: quay.io/tomerfi/starburst-addon-operator
-  newTag: v0.0.2
+  newTag: v0.0.3
 
 # Protect the /metrics endpoint by putting it behind auth.
 patchesStrategicMerge:
