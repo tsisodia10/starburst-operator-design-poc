@@ -22,10 +22,9 @@ import (
 	"os"
 	"strings"
 
-	yaml "gopkg.in/yaml.v3"
-
 	"github.com/example/starburst-addon-operator/api/v1alpha1"
-	validator "github.com/example/starburst-addon-operator/pkg/webhook"
+
+	yaml "gopkg.in/yaml.v3"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -70,6 +69,13 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	// build enterprise resource from file propagated by a secret created for the vault keys
+	desiredEnterprise, err := buildEnterpriseResource(addon, "/opt/enterprise/enterprise.yaml")
+	if err != nil {
+		logger.Error(err, "failed to fetch enterprise manifest")
+		return ctrl.Result{}, err
+	}
+
 	finalizerName := "starburstaddons.example.com/finalizer"
 
 	// cleanup for deletion
@@ -78,13 +84,13 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		if controllerutil.ContainsFinalizer(addon, finalizerName) {
 			// finalizer exists, delete child enterprise
 			enterpriseDelete := &unstructured.Unstructured{}
-			enterpriseDelete.SetGroupVersionKind(validator.EnterpriseGvk)
+			enterpriseDelete.SetGroupVersionKind(desiredEnterprise.GetObjectKind().GroupVersionKind())
 
 			if err := r.Client.Get(
 				ctx,
 				types.NamespacedName{
 					Namespace: req.Namespace,
-					Name:      createDesiredEnterpriseName(req.Name),
+					Name:      buildEnterpriseName(req.Name),
 				},
 				enterpriseDelete); err == nil {
 				// found enterprise resource, delete it
@@ -120,22 +126,7 @@ func (r *StarburstAddonReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	// NOTE secrets, configmaps, prometheus servers, and service monitors from the original operator will goes here
-
-	// load enterprise manifest from path propagated by a secret created for the vault keys
-	manifest, err := os.ReadFile("/opt/enterprise/enterprise.yaml")
-	if err != nil {
-		logger.Error(err, "failed to fetch enterprise manifest")
-		return ctrl.Result{}, err
-	}
-
 	// reconcile unstructured enterprise resource
-	desiredEnterprise, err := createDesiredEnterprise(addon, manifest)
-	if err != nil {
-		logger.Error(err, "failed to fetch enterprise manifest")
-		return ctrl.Result{}, err
-	}
-
 	current := &unstructured.Unstructured{}
 	current.SetGroupVersionKind(desiredEnterprise.GroupVersionKind())
 
@@ -183,17 +174,23 @@ func (r *StarburstAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// create the desired enterprise resource
-func createDesiredEnterprise(addon *v1alpha1.StarburstAddon, manifest []byte) (unstructured.Unstructured, error) {
+// builds enterprise resource from file setting the addon as the owner
+func buildEnterpriseResource(addon *v1alpha1.StarburstAddon, file string) (unstructured.Unstructured, error) {
 	enterprise := unstructured.Unstructured{}
+	// load enterprise manifest from file
+	manifest, err := os.ReadFile(file)
+	if err != nil {
+		return enterprise, err
+	}
+	// deserialize the loaded manifest to a yaml
 	deserialized := make(map[string]interface{})
 	if err := yaml.Unmarshal(manifest, deserialized); err != nil {
 		return enterprise, err
 	}
-
+	// set unstructured data from the deserialized yaml file
 	enterprise.SetUnstructuredContent(deserialized)
-	enterprise.SetGroupVersionKind(validator.EnterpriseGvk)
-	enterprise.SetName(createDesiredEnterpriseName(addon.Name))
+	// set name and owner refs
+	enterprise.SetName(buildEnterpriseName(addon.Name))
 	enterprise.SetNamespace(addon.Namespace)
 	enterprise.SetOwnerReferences([]metav1.OwnerReference{
 		*metav1.NewControllerRef(addon, addon.GetObjectKind().GroupVersionKind()),
@@ -202,7 +199,7 @@ func createDesiredEnterprise(addon *v1alpha1.StarburstAddon, manifest []byte) (u
 	return enterprise, nil
 }
 
-// create the desired enterprise name
-func createDesiredEnterpriseName(name string) string {
+// build the desired enterprise name
+func buildEnterpriseName(name string) string {
 	return fmt.Sprintf("%s-enterprise", name)
 }

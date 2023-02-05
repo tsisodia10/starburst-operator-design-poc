@@ -14,7 +14,7 @@ opm init starburst-addon --default-channel=alpha1 --output yaml > olm-catalog/ca
 ```
 
 ```bash
-opm render quay.io/tomerfi/starburst-addon-operator-bundle:v0.0.3 --output yaml >> olm-catalog/catalog/operator.yaml
+opm render quay.io/tomerfi/starburst-addon-operator-bundle:v0.0.4 --output yaml >> olm-catalog/catalog/operator.yaml
 ```
 
 ```bash
@@ -24,7 +24,7 @@ schema: olm.channel
 package: starburst-addon
 name: alpha1
 entries:
-  - name: starburst-addon.v0.0.3
+  - name: starburst-addon.v0.0.4
 EOF
 ```
 
@@ -35,7 +35,7 @@ opm init starburst-enterprise --default-channel=alpha1 --output yaml >> olm-cata
 ```
 
 ```bash
-opm render quay.io/tomerfi/starburst-enterprise-operator-bundle:v0.0.3 --output yaml >> olm-catalog/catalog/operator.yaml
+opm render quay.io/tomerfi/starburst-enterprise-operator-bundle:v0.0.4 --output yaml >> olm-catalog/catalog/operator.yaml
 ```
 
 ```bash
@@ -45,7 +45,7 @@ schema: olm.channel
 package: starburst-enterprise
 name: alpha1
 entries:
-  - name: starburst-enterprise.v0.0.3
+  - name: starburst-enterprise.v0.0.4
 EOF
 ```
 

@@ -2,4 +2,4 @@ dependencies:
 - type: olm.package
   value:
     packageName: starburst-enterprise
-    version: "0.0.3"
+    version: "0.0.4"

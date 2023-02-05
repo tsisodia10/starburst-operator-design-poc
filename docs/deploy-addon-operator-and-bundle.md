@@ -9,7 +9,7 @@
 
 ```bash
 (cd starburst-addon && \
-make docker-build docker-push IMG="quay.io/tomerfi/starburst-addon-operator:v0.0.3")
+make docker-build docker-push IMG="quay.io/tomerfi/starburst-addon-operator:v0.0.4")
 ```
 
 > Don't forget to make `starburst-addon-operator` PUBLIC.
@@ -18,14 +18,14 @@ make docker-build docker-push IMG="quay.io/tomerfi/starburst-addon-operator:v0.0
 
 ```bash
 (cd starburst-addon && \
-make bundle IMG="quay.io/tomerfi/starburst-addon-operator:v0.0.3" CHANNELS="alpha" DEFAULT_CHANNEL="alpha" VERSION="0.0.3")
+make bundle IMG="quay.io/tomerfi/starburst-addon-operator:v0.0.4" CHANNELS="alpha" DEFAULT_CHANNEL="alpha" VERSION="0.0.4")
 ```
 
 ## Deploy the Bundle
 
 ```bash
 (cd starburst-addon && \
-make bundle-build bundle-push BUNDLE_IMG="quay.io/tomerfi/starburst-addon-operator-bundle:v0.0.3")
+make bundle-build bundle-push BUNDLE_IMG="quay.io/tomerfi/starburst-addon-operator-bundle:v0.0.4")
 ```
 
 > Don't forget to make `starburst-addon-operator-bundle` PUBLIC.

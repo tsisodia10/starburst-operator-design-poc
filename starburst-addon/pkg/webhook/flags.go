@@ -18,8 +18,8 @@ package webhook
 
 import "flag"
 
-// WebhookListenerOptions encapsulates the listener option and flags
-type WebhookListenerOptions struct {
+// WebhookListenerFlags encapsulates the listener flags
+type WebhookListenerFlags struct {
 	TlsCert              string
 	TlsKey               string
 	Port                 int
@@ -29,7 +29,7 @@ type WebhookListenerOptions struct {
 }
 
 // our option instance
-var Options = WebhookListenerOptions{
+var Flags = WebhookListenerFlags{
 	TlsCert:              "",
 	TlsKey:               "",
 	Port:                 -999,
@@ -39,11 +39,11 @@ var Options = WebhookListenerOptions{
 }
 
 // use to load command line flags to options
-func LoadEnterpriseValidatorOptions() {
-	flag.StringVar(&Options.TlsCert, "tls-cert", "", "Certificate for TLS")
-	flag.StringVar(&Options.TlsKey, "tls-key", "", "Private key file for TLS")
-	flag.IntVar(&Options.Port, "port", 443, "Port to listen on for HTTPS traffic")
-	flag.StringVar(&Options.MetricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&Options.ProbeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&Options.EnableLeaderElection, "leader-elect", false, "Enable leader election for controller manager")
+func LoadEnterpriseValidatorFlags() {
+	flag.StringVar(&Flags.TlsCert, "tls-cert", "", "Certificate for TLS")
+	flag.StringVar(&Flags.TlsKey, "tls-key", "", "Private key file for TLS")
+	flag.IntVar(&Flags.Port, "port", 443, "Port to listen on for HTTPS traffic")
+	flag.StringVar(&Flags.MetricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&Flags.ProbeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.BoolVar(&Flags.EnableLeaderElection, "leader-elect", false, "Enable leader election for controller manager")
 }

@@ -29,9 +29,8 @@ import (
 )
 
 func main() {
-	// load options and flags
-	webhook.LoadEnterpriseValidatorOptions()
-
+	// load and parse flags and options
+	webhook.LoadEnterpriseValidatorFlags()
 	opts := zap.Options{
 		Development: true,
 	}
@@ -44,9 +43,9 @@ func main() {
 	// create the manager
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 runtime.NewScheme(),
-		MetricsBindAddress:     webhook.Options.MetricsAddr,
-		HealthProbeBindAddress: webhook.Options.ProbeAddr,
-		LeaderElection:         webhook.Options.EnableLeaderElection,
+		MetricsBindAddress:     webhook.Flags.MetricsAddr,
+		HealthProbeBindAddress: webhook.Flags.ProbeAddr,
+		LeaderElection:         webhook.Flags.EnableLeaderElection,
 		LeaderElectionID:       "4769ef65.example.com",
 	})
 	if err != nil {

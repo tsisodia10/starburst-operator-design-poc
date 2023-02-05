@@ -32,18 +32,10 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	authenticationv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-var EnterpriseGvk = schema.GroupVersionKind{
-	Kind:    "StarburstEnterprise",
-	Group:   "example.com.example.com",
-	Version: "v1alpha1",
-}
 
 // StarburstEnterpriseValidator is in charge of starting up the web server and serving our router
 type StarburstEnterpriseValidator struct {
@@ -77,20 +69,20 @@ func Add(m ctrl.Manager) error {
 
 // start up the web server once once invoked by the manager
 func (v *StarburstEnterpriseValidator) Start(ctx context.Context) error {
-	if Options.TlsCert == "" || Options.TlsKey == "" {
+	if Flags.TlsCert == "" || Flags.TlsKey == "" {
 		err := fmt.Errorf("missing arguments, 'tls-cert' and 'tls-key' are required")
 		v.Logger.Error(err, "can not start validator without a certificate")
 		return err
 	}
 
-	if Options.Port < 0 {
+	if Flags.Port < 0 {
 		err := fmt.Errorf("wrong argument, 'port' must be a positive value")
 		v.Logger.Error(err, "can not start validator without a port")
 		return err
 	}
 
 	// load certificate from key pair
-	cert, err := tls.LoadX509KeyPair(Options.TlsCert, Options.TlsKey)
+	cert, err := tls.LoadX509KeyPair(Flags.TlsCert, Flags.TlsKey)
 	if err != nil {
 		err := fmt.Errorf("certificate issue, failed to load certificate and key")
 		v.Logger.Error(err, "can not run without a certificate")
@@ -103,7 +95,7 @@ func (v *StarburstEnterpriseValidator) Start(ctx context.Context) error {
 
 	// create server
 	webhookServer := &http.Server{
-		Addr:    fmt.Sprintf(":%d", Options.Port),
+		Addr:    fmt.Sprintf(":%d", Flags.Port),
 		Handler: router,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{cert},
@@ -139,37 +131,6 @@ func (v *StarburstEnterpriseValidator) validateEnterprise(writer http.ResponseWr
 	admissionResponse := &admissionv1.AdmissionResponse{}
 	admissionResponse.UID = admissionRequest.Request.UID
 	admissionResponse.Allowed = isUserAllowed(admissionRequest.Request.UserInfo)
-
-	if admissionResponse.Allowed {
-		if operation == admissionv1.Create {
-			// parsing is only required if we need to verify something with object before allowing its creation
-			// if there's no such requirement, this entire branch can be removed
-			_, err := parseEnterprise(v.Decoder, admissionRequest.Request.Object.Raw)
-			if err != nil {
-				v.writeError(writer, err, "failed parsing object", 500)
-				return
-			}
-
-			// NOTE add creation validation logic here if needed
-		}
-
-		if operation == admissionv1.Update {
-			// updating is prohibited (can be modified based on requirements)
-			admissionResponse.Allowed = false
-		}
-
-		if operation == admissionv1.Delete {
-			// parsing is only required if we need to verify something with object before allowing its deletion
-			// if there's no such requirement, this entire branch can be removed
-			_, err := parseEnterprise(v.Decoder, admissionRequest.Request.OldObject.Raw)
-			if err != nil {
-				v.writeError(writer, err, "failed parsing object", 500)
-				return
-			}
-
-			// NOTE add deletion validation logic here if needed
-		}
-	}
 
 	if !admissionResponse.Allowed {
 		// result is only read when not allowed
@@ -237,17 +198,6 @@ func parseRequest(decoder runtime.Decoder, request *http.Request) (*admissionv1.
 	}
 
 	return admissionReviewRequest, nil
-}
-
-// use the decoder to parsing bytes into an unstructured starburst enterprise
-func parseEnterprise(decoder runtime.Decoder, rawObj []byte) (unstructured.Unstructured, error) {
-	enterprise := unstructured.Unstructured{}
-	enterprise.SetGroupVersionKind(EnterpriseGvk)
-
-	if _, _, err := decoder.Decode(rawObj, nil, &enterprise); err != nil {
-		return enterprise, err
-	}
-	return enterprise, nil
 }
 
 // verify the requesting use is our own service account

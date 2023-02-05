@@ -23,10 +23,10 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-02-05T09:45:43Z"
+    createdAt: "2023-02-05T11:16:37Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: starburst-enterprise.v0.0.3
+  name: starburst-enterprise.v0.0.4
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -155,7 +155,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: quay.io/tomerfi/starburst-enterprise-operator:v0.0.3
+                image: quay.io/tomerfi/starburst-enterprise-operator:v0.0.4
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -239,4 +239,4 @@ spec:
   maturity: alpha
   provider:
     name: Me
-  version: 0.0.3
+  version: 0.0.4
