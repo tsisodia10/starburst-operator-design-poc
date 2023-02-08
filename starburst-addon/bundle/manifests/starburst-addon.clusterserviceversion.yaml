@@ -23,7 +23,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-02-05T12:46:20Z"
+    createdAt: "2023-02-08T17:07:51Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: starburst-addon.v0.0.4
@@ -94,6 +94,22 @@ spec:
           - patch
           - update
           - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - alertmanagers
+          - alertmanagers/finalizers
+          - alertmanagerconfigs
+          - prometheuses
+          - prometheuses/finalizers
+          - thanosrulers
+          - thanosrulers/finalizers
+          - servicemonitors
+          - podmonitors
+          - probes
+          - prometheusrules
+          verbs:
+          - '*'
         - apiGroups:
           - authentication.k8s.io
           resources:

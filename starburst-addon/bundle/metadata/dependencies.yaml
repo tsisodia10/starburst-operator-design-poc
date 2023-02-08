@@ -3,3 +3,7 @@ dependencies:
   value:
     packageName: starburst-enterprise
     version: "0.0.4"
+- type: olm.package
+  value:
+    packageName: ose-prometheus-operator
+    version: "4.10.0"

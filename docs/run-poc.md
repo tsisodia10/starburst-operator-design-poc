@@ -34,6 +34,10 @@ kind create cluster --name starburst
 operator-sdk olm install
 ```
 
+## Load OSE Images
+
+Follow instructions [here](load-required-ose-images.md) to load the required images
+
 ## Create catalog source
 
 ```bash
@@ -58,8 +62,9 @@ EOF
 
 ```bash
 # the package manifest records can take up to a minute to appear
-$ watch 'kubectl get packagemanifests.packages.operators.coreos.com | grep starburst'
+$ watch 'kubectl get packagemanifests.packages.operators.coreos.com | grep "starburst\|ose"'
 
+ose-prometheus-operator                    Starburst Combined Catalog   45s
 starburst-addon                            Starburst Combined Catalog   45s
 starburst-enterprise                       Starburst Combined Catalog   45s
 ```

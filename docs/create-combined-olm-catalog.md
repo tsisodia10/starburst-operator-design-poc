@@ -49,6 +49,27 @@ entries:
 EOF
 ```
 
+## Adding the OSE Prometheus Package
+
+```bash
+opm init ose-prometheus-operator --default-channel=alpha1 --output yaml >> olm-catalog/catalog/operator.yaml
+```
+
+```bash
+opm render quay.io/tomerfi/ose-prometheus-operator-bundle:v4.10.0 --output yaml >> olm-catalog/catalog/operator.yaml
+```
+
+```bash
+cat << EOF >> olm-catalog/catalog/operator.yaml
+---
+schema: olm.channel
+package: ose-prometheus-operator
+name: alpha1
+entries:
+  - name: ose-prometheus-operator.4.10.0
+EOF
+```
+
 ## Validating and Deploying the Catalog
 
 ```bash

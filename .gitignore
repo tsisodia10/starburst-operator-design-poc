@@ -6,3 +6,8 @@
 build_all.sh
 rebuild_env.sh
 run_all.sh
+alertmanager
+operator
+ose
+prometheus
+reloader
