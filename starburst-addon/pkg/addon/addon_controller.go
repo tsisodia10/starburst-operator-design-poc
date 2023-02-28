@@ -27,8 +27,8 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	promv2 "github.com/prometheus-operator/prometheus-operator/pkg/client/monitoring/v1"
-	promv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	promv2 "github.com/prometheus-operator/prometheus-operator/v0.25.0/pkg/client/monitoring/v1"
+	promv1alpha1 "github.com/prometheus-operator/prometheus-operator/v0.25.0/pkg/client/monitoring/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
