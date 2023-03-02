@@ -27,8 +27,6 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	promv2 "github.com/prometheus-operator/prometheus-operator/v0.25.0/pkg/client/monitoring/v1"
-	promv1alpha1 "github.com/prometheus-operator/prometheus-operator/v0.25.0/pkg/client/monitoring/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +35,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/cluster-api/api/v1alpha2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -282,6 +283,7 @@ func buildEnterpriseResource(addon *v1alpha1.StarburstAddon, file string) (unstr
 	})
 
 	return enterprise, nil
+
 }
 
 func (r *StarburstAddonReconciler) DeployServiceMonitor(addon *v1alpha1.StarburstAddon) *promv1.ServiceMonitor {
@@ -310,19 +312,31 @@ func (r *StarburstAddonReconciler) DeployServiceMonitor(addon *v1alpha1.Starburs
 }
 
 func (r *StarburstAddonReconciler) DeployPrometheusRules(addon *v1alpha1.StarburstAddon, rules string) *promv1.PrometheusRule {
-	unstructuredRule := unstructured.Unstructured{}
-
-	// deserialize the loaded manifest to a yaml
-	deserializedRules := make(map[string]interface{})
-	if err := yaml.Unmarshal([]byte(rules), deserializedRules); err != nil {
-		fmt.Printf("Error in umarshalling to yaml")
+	// Create a new dynamic client.
+	restConfig, err := clientcmd.BuildConfigFromFlags("", "")
+	if err != nil {
+		fmt.Printf("Dynamic client not created..error!!")
 	}
 
-	// set unstructured data from the deserialized yaml file
-	unstructuredRule.SetUnstructuredContent(deserializedRules)
+	kubeClient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		fmt.Printf("Dynamic client not created..error!!")
+	}
 
-	rule := promv2.PrometheusRulesFromUnstructured(unstructuredRule)
+	// Get a resource (returns an unstructured object).
+	resourceScheme := v1alpha2.SchemeBuilder.
+		GroupVersion.WithResource("rules")
+	resp, err := kubeClient.Resource(resourceScheme).
+		Namespace(addon.Namespace).
+		Get(addon.Name, metav1.GetOptions{})
 
+	// Convert the unstructured object to prometheusRule.
+	unstructured := resp.UnstructuredContent()
+	var rule []promv1.Rule
+	err = runtime.DefaultUnstructuredConverter.
+		FromUnstructured(unstructured, &rule)
+
+	// Use the typed object.
 	// create PrometheusRules step by step
 	promRules := &promv1.PrometheusRule{}
 	promRules.APIVersion = "monitoring.coreos.com/v1"
@@ -342,19 +356,8 @@ func (r *StarburstAddonReconciler) DeployPrometheusRules(addon *v1alpha1.Starbur
 
 func (r *StarburstAddonReconciler) DeployFederationServiceMonitor(addon *v1alpha1.StarburstAddon, metrics string) *promv1.ServiceMonitor {
 
-	unstructuredMetrics := unstructured.Unstructured{}
-
-	// deserialize the loaded manifest to a yaml
-	deserializedMetrics := make(map[string]interface{})
-	if err := yaml.Unmarshal([]byte(metrics), deserializedMetrics); err != nil {
-		fmt.Printf("Error in umarshalling to yaml")
-	}
-
-	// set unstructured data from the deserialized yaml file
-	unstructuredMetrics.SetUnstructuredContent(deserializedMetrics)
-
-	// create metrics format from unstructuredMetrics
-	metric := promv1alpha1.ServiceMonitorFromUnstructured(unstructuredMetrics)
+	metric := make(map[string][]string)
+	metric["match[]"] = append(metric["match[]"], metrics)
 
 	// create federated serviceMonitor
 	fedServiceMonitor := &promv1.ServiceMonitor{}
