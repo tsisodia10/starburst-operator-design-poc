@@ -7,6 +7,12 @@ metadata:
     app.kubernetes.io/part-of: starburst-enterprise
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: starburst-enterprise
+    app.kubernetes.io/remote-write-url: http://sample-stage.com
+    app.kubernetes.io/client-id: xyz123456
+    app.kubernetes.io/client-secret: starburst-secret
+    app.kubernetes.io/rules: starburstrules-sample
+    app.kubernetes.io/metrics: starburstmetrics-sample
+    app.kubernetes.io/regex: starburstregex-sample
   name: starburstenterprise-sample
 spec:
   foo: bar
